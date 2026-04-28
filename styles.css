@@ -19,3 +19,14 @@ th, td { border: 1px solid #666; padding: .3rem; text-align: center; }
 .stat-cell button { padding: .1rem .35rem; }
 .small-btn { font-size: .75rem; }
 #saved-games article { border: 1px solid #888; border-radius: 6px; margin: .35rem 0; padding: .5rem; }
+
+
+.auth-message {
+  min-height: 1.25rem;
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+.auth-message.error {
+  color: #b00020;
+}
