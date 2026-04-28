@@ -39,3 +39,5 @@ th, td { border: 1px solid #666; padding: .3rem; text-align: center; }
 .chart-bar span { display:block; height:100%; background:#2e7d32; }
 .chart-label { font-weight: 600; }
 .chart-value { font-size: .8rem; }
+.debug-panel { width: 100%; max-width: 520px; }
+.debug-log { max-height: 180px; overflow: auto; font-size: .75rem; margin: .35rem 0 0; padding: .5rem; border: 1px solid #777; }
