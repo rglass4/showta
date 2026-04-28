@@ -1,0 +1,21 @@
+:root { font-family: Arial, sans-serif; color-scheme: light dark; }
+body { margin: 0; padding: 1rem; }
+header { display: flex; justify-content: space-between; align-items: center; }
+.card { border: 1px solid #666; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+.hidden { display: none; }
+nav { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+button { padding: .4rem .7rem; cursor: pointer; }
+button.secondary { opacity: .85; }
+label { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; }
+input, select { padding: .35rem; min-width: 80px; }
+.row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: .75rem; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 980px; }
+th, td { border: 1px solid #666; padding: .3rem; text-align: center; }
+.mission-done { background: #2e7d32; color: #fff; }
+.mission-close { background: #c8e6c9; color: #000; }
+.mission-far { background: #ffcdd2; color: #000; }
+.stat-cell { display: flex; align-items: center; justify-content: center; gap: .2rem; }
+.stat-cell button { padding: .1rem .35rem; }
+.small-btn { font-size: .75rem; }
+#saved-games article { border: 1px solid #888; border-radius: 6px; margin: .35rem 0; padding: .5rem; }

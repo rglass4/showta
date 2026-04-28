@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MLB The Show 26 - Team Affinity Tracker</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Team Affinity Tracker</h1>
+      <div id="auth-status"></div>
+    </header>
+
+    <main>
+      <section id="login-view" class="card">
+        <h2>Sign In</h2>
+        <form id="login-form">
+          <label>Email <input type="email" id="email" required /></label>
+          <label>Password <input type="password" id="password" required /></label>
+          <button type="submit">Sign In</button>
+        </form>
+        <button id="signup-btn" class="secondary">Create Account</button>
+      </section>
+
+      <section id="app-view" class="hidden">
+        <nav>
+          <button data-tab="progress">Progress Board</button>
+          <button data-tab="game">Log Game</button>
+          <button data-tab="base">Base Values</button>
+          <button data-tab="near">Near Completion</button>
+          <button id="logout-btn" class="secondary">Logout</button>
+        </nav>
+
+        <section id="progress-tab" class="tab card">
+          <h2>Spreadsheet Progress Board</h2>
+          <div class="table-wrap">
+            <table id="progress-table"></table>
+          </div>
+        </section>
+
+        <section id="game-tab" class="tab card hidden">
+          <h2>Game Entry</h2>
+          <div class="row">
+            <label>Played Date <input type="date" id="played-at" /></label>
+            <label>Mode <select id="mode-select"></select></label>
+            <label>Difficulty <select id="difficulty-select"></select></label>
+          </div>
+          <label>Notes <input id="game-notes" placeholder="Optional" /></label>
+
+          <h3>Lineup & Substitutions</h3>
+          <div class="table-wrap">
+            <table id="entry-table">
+              <thead>
+                <tr>
+                  <th>Slot</th><th>Type</th><th>Stint</th><th>Team</th>
+                  <th>PA</th><th>1B</th><th>2B</th><th>3B</th><th>HR</th><th>RBI</th><th>R</th><th>SB</th><th>BB</th>
+                  <th>IP</th><th>W</th><th>K</th><th>QS</th><th>SV</th><th>HLD</th><th>CG</th><th>SHO</th>
+                  <th>PXP</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot>
+                <tr><td colspan="21">Rounded Game Total PXP</td><td id="game-total">0</td><td></td></tr>
+              </tfoot>
+            </table>
+          </div>
+          <div class="row">
+            <button id="save-game-btn">Save Game</button>
+            <button id="refresh-games-btn" class="secondary">Refresh Game List</button>
+          </div>
+
+          <h3>Saved Games</h3>
+          <div id="saved-games"></div>
+        </section>
+
+        <section id="base-tab" class="tab card hidden">
+          <h2>Edit Base Values</h2>
+          <p>These are correction/snapshot values added on top of logged games.</p>
+          <div class="table-wrap">
+            <table id="base-table"></table>
+          </div>
+          <button id="save-base-btn">Save Base Values</button>
+        </section>
+
+        <section id="near-tab" class="tab card hidden">
+          <h2>Near Completion</h2>
+          <p>Equivalent PXP uses your rule: each hit/HR/K equals 100 PXP.</p>
+          <div class="table-wrap">
+            <table id="near-table"></table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
