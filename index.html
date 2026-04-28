@@ -11,7 +11,16 @@
   <body>
     <header>
       <h1>Team Affinity Tracker</h1>
-      <div id="auth-status"></div>
+      <div class="header-auth">
+        <div id="auth-status">Logged out</div>
+        <form id="mini-login-form" class="mini-login">
+          <input type="email" id="email" placeholder="Email" required />
+          <input type="password" id="password" placeholder="Password" autocomplete="current-password" required />
+          <button type="submit">Log In</button>
+        </form>
+        <button id="logout-btn" class="secondary hidden">Logout</button>
+        <p id="auth-message" class="auth-message" aria-live="polite"></p>
+      </div>
     </header>
 
     <main>
@@ -21,28 +30,23 @@
         <p>This homepage is public. Sign in only when you want to enter or edit your personal tracker data.</p>
       </section>
 
-      <section id="login-view" class="card">
-        <h2>Sign In</h2>
-        <form id="login-form">
-          <label>Email <input type="email" id="email" required /></label>
-          <label>Password <input type="password" id="password" required /></label>
-          <button type="submit">Sign In</button>
-        </form>
-        <p id="auth-message" class="auth-message" aria-live="polite"></p>
-        <button id="signup-btn" class="secondary">Create Account</button>
-      </section>
 
-      <section id="app-view" class="hidden">
+      <section id="app-view">
         <nav>
-          <button data-tab="progress">Progress Board</button>
-          <button data-tab="game">Log Game</button>
-          <button data-tab="base">Base Values</button>
-          <button data-tab="near">Near Completion</button>
-          <button id="logout-btn" class="secondary">Logout</button>
+          <button data-tab="progress">Dashboard</button>
+          <button data-tab="base">Manage Base Stats</button>
+          <button data-tab="game">Enter New Game</button>
+          <button data-tab="near">All Milestones</button>
         </nav>
 
         <section id="progress-tab" class="tab card">
-          <h2>Spreadsheet Progress Board</h2>
+          <h2>rglass4@gmail.com Dashboard</h2>
+          <div id="dashboard-chart" class="chart-grid"></div>
+          <h3>Top 10 Closest Milestones</h3>
+          <div class="table-wrap">
+            <table id="top-near-table"></table>
+          </div>
+          <h3>Full Team Progress</h3>
           <div class="table-wrap">
             <table id="progress-table"></table>
           </div>

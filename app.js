@@ -166,7 +166,7 @@ function renderProgressTable(rows) {
   });
 }
 
-function renderNearTable(rows) {
+function renderNearTable(rows, limit = 100, tableId = 'near-table') {
   const missionDefs = [
     ['PXP 7,500', 'total_pxp', 'pxp_7500', 1], ['PXP 25,000', 'total_pxp', 'pxp_25000', 1],
     ['PXP 50,000', 'total_pxp', 'pxp_50000', 1], ['PXP 75,000', 'total_pxp', 'pxp_75000', 1],
@@ -186,17 +186,32 @@ function renderNearTable(rows) {
   });
   items.sort((a, b) => a.eq_pxp - b.eq_pxp);
 
-  const table = $('#near-table');
+  const table = $(`#${tableId}`);
   table.innerHTML = '<tr><th>Team</th><th>Mission</th><th>Remaining</th><th>Equivalent PXP</th></tr>' +
-    items.slice(0, 100).map((x) => `<tr><td>${x.team}</td><td>${x.mission}</td><td>${x.remaining}</td><td>${x.eq_pxp}</td></tr>`).join('');
+    items.slice(0, limit).map((x) => `<tr><td>${x.team}</td><td>${x.mission}</td><td>${x.remaining}</td><td>${x.eq_pxp}</td></tr>`).join('');
 }
 
+
+function renderDashboardChart(rows) {
+  const chart = $('#dashboard-chart');
+  if (!chart) return;
+  chart.innerHTML = '';
+  rows.forEach((r) => {
+    const pct = Math.min(100, Math.round((Number(r.total_pxp || 0) / Number(r.pxp_100000 || 100000)) * 100));
+    const item = document.createElement('div');
+    item.className = 'chart-item';
+    item.innerHTML = `<div class="chart-label">${r.abbr}</div><div class="chart-bar"><span style="width:${pct}%"></span></div><div class="chart-value">${pct}%</div>`;
+    chart.append(item);
+  });
+}
 async function loadProgress() {
   const { data, error } = await sb.from('v_user_team_progress').select('*').order('abbr');
   if (error) return alert(error.message);
   progressRows = data;
   renderProgressTable(data);
   renderNearTable(data);
+  renderNearTable(data, 10, 'top-near-table');
+  renderDashboardChart(data);
 }
 
 function renderBaseTable() {
@@ -300,9 +315,10 @@ async function bootstrapLookups() {
 async function setAuthUI() {
   const { data: { session } } = await sb.auth.getSession();
   const authed = Boolean(session);
-  $('#login-view').classList.toggle('hidden', authed);
-  $('#app-view').classList.toggle('hidden', !authed);
-  $('#auth-status').textContent = authed ? `Signed in as ${session.user.email}` : 'Signed out';
+  $('#app-view').classList.remove('hidden');
+  $('#auth-status').textContent = authed ? `Logged in as ${session.user.email}` : 'Logged out';
+  $('#mini-login-form').classList.toggle('hidden', authed);
+  $('#logout-btn').classList.toggle('hidden', !authed);
 
   if (authed) {
     await bootstrapLookups();
@@ -318,7 +334,7 @@ document.querySelectorAll('nav button[data-tab]').forEach((btn) => btn.onclick =
   if (btn.dataset.tab === 'base') renderBaseTable();
 });
 
-$('#login-form').onsubmit = async (e) => {
+$('#mini-login-form').onsubmit = async (e) => {
   e.preventDefault();
   const email = $('#email').value.trim();
   const password = $('#password').value;
@@ -341,17 +357,6 @@ $('#login-form').onsubmit = async (e) => {
   } finally {
     if (submitBtn) submitBtn.disabled = false;
   }
-};
-
-$('#signup-btn').onclick = async () => {
-  const email = $('#email').value.trim();
-  const password = $('#password').value;
-  const { error } = await sb.auth.signUp({ email, password });
-  if (error) {
-    setAuthMessage(error.message, true);
-    return;
-  }
-  setAuthMessage('Account created. Check email if confirmation is enabled.');
 };
 
 $('#logout-btn').onclick = async () => { await sb.auth.signOut(); await setAuthUI(); };
