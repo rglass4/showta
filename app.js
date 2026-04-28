@@ -17,6 +17,14 @@ let entryRows = [];
 
 const $ = (q) => document.querySelector(q);
 
+function setAuthMessage(message, isError = false) {
+  const el = $('#auth-message');
+  if (!el) return;
+  el.textContent = message || '';
+  el.classList.toggle('error', Boolean(message) && isError);
+}
+
+
 function showTab(id) {
   document.querySelectorAll('.tab').forEach((el) => el.classList.add('hidden'));
   $(`#${id}-tab`).classList.remove('hidden');
@@ -312,19 +320,38 @@ document.querySelectorAll('nav button[data-tab]').forEach((btn) => btn.onclick =
 
 $('#login-form').onsubmit = async (e) => {
   e.preventDefault();
-  const email = $('#email').value;
+  const email = $('#email').value.trim();
   const password = $('#password').value;
-  const { error } = await sb.auth.signInWithPassword({ email, password });
-  if (error) return alert(error.message);
-  await setAuthUI();
+  const submitBtn = $('#login-form button[type="submit"]');
+
+  setAuthMessage('Signing in...');
+  if (submitBtn) submitBtn.disabled = true;
+
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      setAuthMessage(error.message, true);
+      return;
+    }
+    setAuthMessage('Signed in successfully. Loading your tracker...');
+    await setAuthUI();
+    setAuthMessage('');
+  } catch (err) {
+    setAuthMessage(err?.message || 'Sign-in failed. Please try again.', true);
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
 };
 
 $('#signup-btn').onclick = async () => {
-  const email = $('#email').value;
+  const email = $('#email').value.trim();
   const password = $('#password').value;
   const { error } = await sb.auth.signUp({ email, password });
-  if (error) return alert(error.message);
-  alert('Account created. Check email if confirmation is enabled.');
+  if (error) {
+    setAuthMessage(error.message, true);
+    return;
+  }
+  setAuthMessage('Account created. Check email if confirmation is enabled.');
 };
 
 $('#logout-btn').onclick = async () => { await sb.auth.signOut(); await setAuthUI(); };
