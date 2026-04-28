@@ -17,6 +17,17 @@ let entryRows = [];
 
 const $ = (q) => document.querySelector(q);
 
+function logDebug(event, payload = {}) {
+  const ts = new Date().toISOString();
+  const line = `[${ts}] ${event} ${JSON.stringify(payload)}`;
+  const logEl = $('#debug-log');
+  if (logEl) {
+    logEl.textContent += `${line}\n`;
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  console.debug('[TeamAffinity]', event, payload);
+}
+
 function setAuthMessage(message, isError = false) {
   const el = $('#auth-message');
   if (!el) return;
@@ -206,7 +217,15 @@ function renderDashboardChart(rows) {
 }
 async function loadProgress() {
   const { data, error } = await sb.from('v_user_team_progress').select('*').order('abbr');
-  if (error) return alert(error.message);
+  if (error) {
+    logDebug('loadProgress.error', { message: error.message, code: error.code, details: error.details, hint: error.hint });
+    setAuthMessage(`Progress load failed: ${error.message}`, true);
+    return;
+  }
+  logDebug('loadProgress.success', { rows: data?.length ?? 0 });
+  if (!data || data.length === 0) {
+    setAuthMessage('No progress rows returned. Check mission_targets seed data and user auth session.', true);
+  }
   progressRows = data;
   renderProgressTable(data);
   renderNearTable(data);
@@ -277,7 +296,12 @@ async function saveGame() {
 
 async function loadGames() {
   const { data, error } = await sb.from('games').select('id, played_at, notes, game_mode_code, difficulty_code, created_at').order('created_at', { ascending: false }).limit(20);
-  if (error) return;
+  if (error) {
+    logDebug('loadGames.error', { message: error.message, code: error.code, details: error.details, hint: error.hint });
+    setAuthMessage(`Saved games load failed: ${error.message}`, true);
+    return;
+  }
+  logDebug('loadGames.success', { rows: data?.length ?? 0 });
   const wrap = $('#saved-games');
   wrap.innerHTML = '';
 
@@ -306,22 +330,43 @@ async function bootstrapLookups() {
   teams = t || [];
   modes = m || [];
   difficulties = d || [];
+  logDebug('bootstrapLookups.success', { teams: teams.length, modes: modes.length, difficulties: difficulties.length });
 
   $('#mode-select').innerHTML = modes.map((x) => `<option value="${x.code}">${x.label} x${x.multiplier}</option>`).join('');
   $('#difficulty-select').innerHTML = difficulties.map((x) => `<option value="${x.code}">${x.label} x${x.multiplier}</option>`).join('');
   $('#played-at').value = new Date().toISOString().slice(0, 10);
 }
 
+async function runDataHealthChecks() {
+  const [{ count: teamsCount, error: teamsErr }, { count: mtCount, error: mtErr }, { count: progressCount, error: progErr }] = await Promise.all([
+    sb.from('teams').select('*', { count: 'exact', head: true }),
+    sb.from('mission_targets').select('*', { count: 'exact', head: true }),
+    sb.from('v_user_team_progress').select('*', { count: 'exact', head: true })
+  ]);
+
+  if (teamsErr) logDebug('health.teams.error', { message: teamsErr.message, code: teamsErr.code, details: teamsErr.details, hint: teamsErr.hint });
+  if (mtErr) logDebug('health.mission_targets.error', { message: mtErr.message, code: mtErr.code, details: mtErr.details, hint: mtErr.hint });
+  if (progErr) logDebug('health.progress_view.error', { message: progErr.message, code: progErr.code, details: progErr.details, hint: progErr.hint });
+
+  logDebug('health.summary', { teamsCount, missionTargetsCount: mtCount, progressCount });
+
+  if ((teamsCount ?? 0) > 0 && (mtCount ?? 0) === 0) {
+    setAuthMessage('No mission targets found. Run supabase/seed_example.sql in Supabase SQL editor.', true);
+  }
+}
+
 async function setAuthUI() {
   const { data: { session } } = await sb.auth.getSession();
   const authed = Boolean(session);
-  $('#app-view').classList.remove('hidden');
+  logDebug('auth.session', { authed, email: session?.user?.email || null });
+  $('#app-view').classList.toggle('hidden', !authed);
   $('#auth-status').textContent = authed ? `Logged in as ${session.user.email}` : 'Logged out';
   $('#mini-login-form').classList.toggle('hidden', authed);
   $('#logout-btn').classList.toggle('hidden', !authed);
 
   if (authed) {
     await bootstrapLookups();
+    await runDataHealthChecks();
     buildDefaultEntries();
     await loadProgress();
     renderBaseTable();
@@ -338,7 +383,9 @@ $('#mini-login-form').onsubmit = async (e) => {
   e.preventDefault();
   const email = $('#email').value.trim();
   const password = $('#password').value;
-  const submitBtn = $('#login-form button[type="submit"]');
+  const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+
+  logDebug('login.submit.start', { email });
 
   setAuthMessage('Signing in...');
   if (submitBtn) submitBtn.disabled = true;
@@ -346,9 +393,11 @@ $('#mini-login-form').onsubmit = async (e) => {
   try {
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if (error) {
+      logDebug('login.submit.error', { message: error.message, code: error.code, details: error.details, hint: error.hint });
       setAuthMessage(error.message, true);
       return;
     }
+    logDebug('login.submit.success', { email });
     setAuthMessage('Signed in successfully. Loading your tracker...');
     await setAuthUI();
     setAuthMessage('');
