@@ -17,6 +17,16 @@ let entryRows = [];
 
 const $ = (q) => document.querySelector(q);
 
+let authUiRequestId = 0;
+
+function setDashboardTitle(session) {
+  const title = $('#dashboard-title');
+  if (!title) return;
+  const email = session?.user?.email;
+  title.textContent = email ? `${email} Dashboard` : 'Dashboard';
+}
+
+
 function logDebug(event, payload = {}) {
   const ts = new Date().toISOString();
   const line = `[${ts}] ${event} ${JSON.stringify(payload)}`;
@@ -355,14 +365,18 @@ async function runDataHealthChecks() {
   }
 }
 
-async function setAuthUI() {
-  const { data: { session } } = await sb.auth.getSession();
+async function setAuthUI(sessionOverride) {
+  const requestId = ++authUiRequestId;
+  const session = sessionOverride ?? (await sb.auth.getSession()).data.session;
   const authed = Boolean(session);
   logDebug('auth.session', { authed, email: session?.user?.email || null });
   $('#app-view').classList.toggle('hidden', !authed);
   $('#auth-status').textContent = authed ? `Logged in as ${session.user.email}` : 'Logged out';
+  setDashboardTitle(session);
   $('#mini-login-form').classList.toggle('hidden', authed);
   $('#logout-btn').classList.toggle('hidden', !authed);
+
+  if (requestId !== authUiRequestId) return;
 
   if (authed) {
     await bootstrapLookups();
@@ -415,5 +429,5 @@ $('#save-base-btn').onclick = saveBaseValues;
 $('#mode-select').onchange = renderEntryTable;
 $('#difficulty-select').onchange = renderEntryTable;
 
-sb.auth.onAuthStateChange(() => setAuthUI());
+sb.auth.onAuthStateChange((_event, session) => setAuthUI(session));
 setAuthUI();
